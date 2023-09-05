@@ -71,7 +71,9 @@ class _HomePageState extends State<HomePage> {
    }
   }
   void _scrollListner(){
-    
+    if(scrollController.position.pixels == scrollController.position.maxScrollExtent){
+      
+    }
     print("Scrolllistner called");
     // fetchPosts();
   }
