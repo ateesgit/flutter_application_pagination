@@ -12,7 +12,10 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final scrollController =ScrollController();
+  
   List posts = [];
+  bool isLoadingMore = false;
+  int page = 1;
   @override
   void initState() {
     // TODO: implement initState
@@ -30,9 +33,10 @@ class _HomePageState extends State<HomePage> {
       body: ListView.builder(
         padding: EdgeInsets.all(12.0),
         controller: scrollController,
-        itemCount: posts.length,
+        itemCount:isLoadingMore? posts.length+1 : posts.length,
         itemBuilder: (context,index){
-          final post = posts[index];
+        if(index < posts.length){
+               final post = posts[index];
           final title = post['title']['rendered'];
           final discription = post['title']['rendered'];
         return Card(
@@ -51,30 +55,45 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         );
+      } else {
+        return Center(
+          child: CircularProgressIndicator(),
+        );
+      }
       }),
     );
   }
 
   Future<void> fetchPosts() async{
-   const url = 'https://techcrunch.com/wp-json/wp/v2/posts?context=embed&per_page=10&page=3';
+   final url = 'https://techcrunch.com/wp-json/wp/v2/posts?context=embed&per_page=10&page=$page';
+   print('is===${url}');
    final uri = Uri.parse(url);
    final response =await http.get(uri);
    if(response.statusCode == 200){
       //Expected Response
       final json = jsonDecode(response.body) as List;
       setState(() {
-        posts = json; 
+        posts = posts+ json; 
       });
    }else{
     //UnExpected response
     print("UnExpected response");
    }
   }
-  void _scrollListner(){
+  Future<void> _scrollListner() async {
+    if(isLoadingMore) return;
     if(scrollController.position.pixels == scrollController.position.maxScrollExtent){
-      
+      setState(() {
+        isLoadingMore = true;
+      });
+      page = page + 1;
+     await fetchPosts();
+     setState(() {
+       isLoadingMore = false;
+     });
+      log("call");
     }
-    print("Scrolllistner called");
+    // print("Scrolllistner called");
     // fetchPosts();
   }
 }
